@@ -56,8 +56,10 @@ function inverseOf(name: string): string {
   return name.endsWith("'") ? name.slice(0, -1) : `${name}'`;
 }
 
-function canManualStart(state: Pick<CubeState, "active" | "queue" | "isScrambling">): boolean {
-  return !state.active && state.queue.length === 0 && !state.isScrambling;
+function canManualStart(
+  state: Pick<CubeState, "active" | "queue" | "isScrambling" | "manual">
+): boolean {
+  return !state.active && state.queue.length === 0 && !state.isScrambling && !state.manual;
 }
 
 function findMoveName(move: Move): string | null {
@@ -212,8 +214,7 @@ export const useCubeStore = create<CubeState>((set, get) => ({
     if (!state.manual) return;
     const { move, affected, angle } = state.manual;
 
-    const halfPi = Math.PI / 2;
-    const snapped = Math.round(angle / halfPi);
+    const snapped = Math.round(angle / (Math.PI / 2));
 
     if (snapped === 0) {
       set({ manual: null });
@@ -221,14 +222,10 @@ export const useCubeStore = create<CubeState>((set, get) => ({
     }
 
     const direction = (snapped > 0 ? 1 : -1) as 1 | -1;
-    const times = Math.abs(snapped);
-
-    for (let i = 0; i < times; i++) {
-      commitRotation(affected, move.axis, direction);
-    }
+    commitRotation(affected, move.axis, direction);
 
     const moveName = findMoveName(direction === move.direction ? move : { ...move, direction });
-    const added = moveName ? Array<string>(times).fill(moveName) : [];
+    const added = moveName ? [moveName] : [];
 
     const nowSolved = isSolved(state.cubies);
 
@@ -236,7 +233,7 @@ export const useCubeStore = create<CubeState>((set, get) => ({
       manual: null,
       turnCount: state.turnCount + 1,
       history: [...state.history, ...added],
-      moveCount: state.moveCount + times,
+      moveCount: state.moveCount + 1,
       solved: nowSolved,
       solvedAt: nowSolved && !state.solved ? Date.now() : state.solvedAt,
     });
