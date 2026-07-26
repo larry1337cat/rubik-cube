@@ -18,6 +18,7 @@ function easeInOutQuad(t: number) {
 }
 
 interface DragState {
+  pointerId: number;
   startX: number;
   startY: number;
   faceNormal: THREE.Vector3;
@@ -69,6 +70,7 @@ export function Cube3D({ onDragStart, onDragEnd }: Cube3DProps) {
 
     function handlePointerDown(event: PointerEvent) {
       if (event.target !== canvas) return;
+      if (drag.current) return;
       if (!useCubeStore.getState().canBeginManual()) return;
 
       const hits = raycastStickers(event);
@@ -86,6 +88,7 @@ export function Cube3D({ onDragStart, onDragEnd }: Cube3DProps) {
       event.preventDefault();
 
       drag.current = {
+        pointerId: event.pointerId,
         startX: event.clientX,
         startY: event.clientY,
         faceNormal: worldNormal,
@@ -102,7 +105,7 @@ export function Cube3D({ onDragStart, onDragEnd }: Cube3DProps) {
 
     function handlePointerMove(event: PointerEvent) {
       const d = drag.current;
-      if (!d) return;
+      if (!d || event.pointerId !== d.pointerId) return;
 
       event.preventDefault();
 
@@ -163,10 +166,10 @@ export function Cube3D({ onDragStart, onDragEnd }: Cube3DProps) {
       useCubeStore.getState().updateManual(angle);
     }
 
-    function handlePointerUp() {
+    function handlePointerUp(event: PointerEvent) {
       const d = drag.current;
+      if (!d || event.pointerId !== d.pointerId) return;
       drag.current = null;
-      if (!d) return;
       if (!d.result) return;
 
       onDragEnd();
@@ -192,14 +195,25 @@ export function Cube3D({ onDragStart, onDragEnd }: Cube3DProps) {
       store.commitManual();
     }
 
+    function handlePointerCancel(event: PointerEvent) {
+      const d = drag.current;
+      if (!d || event.pointerId !== d.pointerId) return;
+      drag.current = null;
+      if (!d.result) return;
+      onDragEnd();
+      useCubeStore.getState().cancelManual();
+    }
+
     window.addEventListener("pointerdown", handlePointerDown, { capture: true, passive: false });
     window.addEventListener("pointermove", handlePointerMove, { passive: false });
     window.addEventListener("pointerup", handlePointerUp);
+    window.addEventListener("pointercancel", handlePointerCancel);
 
     return () => {
       window.removeEventListener("pointerdown", handlePointerDown, true);
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", handlePointerUp);
+      window.removeEventListener("pointercancel", handlePointerCancel);
       canvas.style.touchAction = previousTouchAction;
     };
   }, [camera, gl, onDragStart, onDragEnd]);
