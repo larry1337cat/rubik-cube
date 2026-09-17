@@ -31,13 +31,7 @@ Live: https://larry1337cat.github.io/rubik-cube/
 - `src/ui/` - 2D overlay UI (controls, timer, solved celebration).
 - `src/config/keybindings.ts` - keyboard shortcut mapping, edit this to change keys.
 - `src/audio/` - sound playback.
-
-
-## Known limitations
-
-- No persistence: refreshing the page resets the cube to solved state. State is kept in memory only.
-- No drag-to-turn on the cube itself — turning is done via buttons/keyboard only.
-- No general solver: this project does not solve an arbitrary cube state.
+  
 
 ## Deployment
 
