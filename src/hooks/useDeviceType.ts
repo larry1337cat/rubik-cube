@@ -9,12 +9,6 @@ function detect(): DeviceType {
   return coarsePointer || narrowScreen ? "touch" : "desktop";
 }
 
-/**
- * Auto device detection: combines pointer precision (mouse vs finger) with
- * viewport width, and re-evaluates on resize/orientation change — so
- * rotating a tablet or resizing a browser window updates the layout live
- * instead of only checking once on load.
- */
 export function useDeviceType(): DeviceType {
   const [device, setDevice] = useState<DeviceType>(detect);
 
